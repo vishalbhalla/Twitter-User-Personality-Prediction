@@ -35,7 +35,7 @@ class FilterStopWords:
     #end
 
     #start getfeatureVector
-    def getFeatureVector(self, tweet):
+    def getFeatureVector(self, tweet, stopWords):
         featureVector = []
         #split tweet into words
         words = tweet.split()
