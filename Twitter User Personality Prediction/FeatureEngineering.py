@@ -3,12 +3,16 @@ import csv
 from PreprocessTweets import PreprocessTweets
 from FilterStopWords import FilterStopWords
 import nltk
+# from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from textblob import TextBlob
 
 class FeatureEngineering:
 
     def __init__(self):
         self.name = 'FeatureEngineering'
         self.featureList = []
+        # self.sid = SentimentIntensityAnalyzer()
+
 
     #start extract_features
     def extract_features(self,tweet):
@@ -40,9 +44,29 @@ class FeatureEngineering:
                 self.featureList.append(word)
             # featureList.append([featureVector[i] for i in xrange(len(featureVector))])
 
+            # Use NLTK Vader for Sentiment Analysis
+
+            # Citation: Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text.
+            # Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
             # Extract sentiment based on the tweet.
-            sentiment = ''
-            featureVector.append(sentiment)
+            # ss = self.sid.polarity_scores(row)
+            # for k in sorted(ss):
+            #     print('{0}: {1}, '.format(k, ss[k]))
+            #
+            # totSentiment = sorted(ss)[0]
+
+            # Use TextBlog for Sentiment Analysis
+            print tweet
+            blob = TextBlob(tweet)
+            print blob
+            sentiment = 0
+            for sentence in blob.sentences:
+                print sentence
+                sentiment += sentence.sentiment.polarity
+                print sentiment
+
+            totSentiment = sentiment/ len(blob.sentences)
+            featureVector.append(totSentiment)
 
             tweets.append((featureVector, personality));
         #end loop
