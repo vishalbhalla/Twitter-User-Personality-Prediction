@@ -23,6 +23,10 @@ class PreprocessTweets:
         tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
         #trim
         tweet = tweet.strip('\'"')
+
+        # Remove all Non-ASCII characters
+        tweet = re.sub(r'[^\x00-\x7F]+',' ', tweet)
+
         return tweet
     #end
 

@@ -84,5 +84,74 @@ class FeatureEngineering:
 
 
 
+## Create New Training set based on personality labels predicted from Survey results
+
+    def createNewTrainingSet(self):
+
+        objFilterStopWords = FilterStopWords()
+        objPreprocessTweets = PreprocessTweets()
+
+        stopWords = objFilterStopWords.getStopWordList('TwitterData/StopWords.txt')
+
+        #Read the tweets one by one and process it
+        inpTweets = csv.reader(open('TwitterData/survey_dump.csv', 'rb'), delimiter=',') #, quotechar='|')
+        tweets = []
+        for row in inpTweets:
+            personality = row[3]
+            tweet = row[2]
+            processedTweet = objPreprocessTweets.processTweet(tweet)
+            featureVector = objFilterStopWords.getFeatureVector(processedTweet, stopWords)
+
+            # Append to feature list to collect total words
+            for word in featureVector:
+                self.featureList.append(word)
+            # featureList.append([featureVector[i] for i in xrange(len(featureVector))])
+
+            # Use NLTK Vader for Sentiment Analysis
+
+            # Citation: Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text.
+            # Eighth International Conference on Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
+            # Extract sentiment based on the tweet.
+            # ss = self.sid.polarity_scores(row)
+            # for k in sorted(ss):
+            #     print('{0}: {1}, '.format(k, ss[k]))
+            #
+            # totSentiment = sorted(ss)[0]
+
+            # Use TextBlog for Sentiment Analysis
+            # print tweet
+            # blob = TextBlob(tweet)
+            # print processedTweet
+            # processedTweet = 'AT_USER chick said latin women are weak. shhhhhhheeeeeeeiiiiiit. not at all!'
+            blob = TextBlob(processedTweet)
+            # print blob
+            sentiment = 0
+            for sentence in blob.sentences:
+                # print sentence
+                sentiment += sentence.sentiment.polarity
+                # print sentiment
+
+            totSentiment = sentiment/ len(blob.sentences)
+            featureVector.append(totSentiment)
+
+            tweets.append((featureVector, personality));
+        #end loop
+        print tweets
+        print self.featureList
+        # Remove featureList duplicates
+        featureList = list(set(self.featureList))
+
+        # Extract feature vector for all tweets in one shote
+        training_set = nltk.classify.util.apply_features(self.extract_features, tweets)
+
+        print self.featureList
+        print training_set
+        return training_set
+
+
+
+
+
+
 
 

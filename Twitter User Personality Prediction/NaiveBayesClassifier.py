@@ -14,7 +14,8 @@ objFilterStopWords = FilterStopWords()
 objPreprocessTweets = PreprocessTweets()
 objFeatureEngineering = FeatureEngineering()
 
-trainingSet = objFeatureEngineering.createTrainingSet()
+#trainingSet = objFeatureEngineering.createTrainingSet()
+trainingSet = objFeatureEngineering.createNewTrainingSet()
 
 stopWordListFileName = 'TwitterData/StopWords.txt'
 stopWords = objFilterStopWords.getStopWordList(stopWordListFileName)
