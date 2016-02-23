@@ -1,10 +1,8 @@
-import csv
-import sys
 from matplotlib import pyplot
 from mpl_toolkits.basemap import Basemap
 
 
-COLORS = ['yo', 'go', 'ro', 'wo', 'ko', 'yo', 'mo', 'ro', 'yo', 'ko']
+COLORS = ['green', 'red', 'blue', 'yellow', 'purple', 'olive', 'khaki', 'indigo', 'aquamarine', 'orange']
 class GeoMap:
 	
 	def plot_points(self, data_points, color_provider, coord_mapper):
@@ -20,10 +18,6 @@ class GeoMap:
 		for row in data_points:
 			latitude, longitude = coord_mapper(row)
 			x, y = base_map(longitude, latitude)
-			base_map.plot(x, y, color_provider(row), markersize=4)
+			base_map.plot(x, y, marker='o', color=color_provider(row), markersize=4)
 		pyplot.show()
 		
-if __name__ == "__main__":
-	data_file = sys.argv[1]
-	file_reader = csv.reader(open(data_file, "r"))
-	GeoMap().plot_points(file_reader, lambda row: COLORS[int(row[1])], lambda row:[row[2], row[3]])

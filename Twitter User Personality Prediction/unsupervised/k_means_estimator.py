@@ -10,8 +10,8 @@ from sklearn.feature_extraction.dict_vectorizer import DictVectorizer
 from textblob.blob import TextBlob
 from textblob.en.np_extractors import ConllExtractor
 from textblob.en.taggers import NLTKTagger
+from utils.time_utils import time_it
 
-from time_utils import time_it
 
 
 class KMeansEstimator:
