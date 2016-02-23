@@ -1,17 +1,17 @@
-from collections import Counter
 import copy
 import csv
+import sys
+import logging
+from collections import Counter
 from scipy.sparse import csr_matrix
 from scipy.sparse.coo import coo_matrix
 from sklearn.cluster.k_means_ import KMeans
 from sklearn.feature_extraction.dict_vectorizer import DictVectorizer
-import sys
 from textblob.blob import TextBlob
 from textblob.en.np_extractors import ConllExtractor
 from textblob.en.taggers import NLTKTagger
 
 from time_utils import time_it
-import logging
 
 
 class KMeansEstimator:
@@ -35,10 +35,18 @@ class KMeansEstimator:
     LONGITUDE_FEATURE_KEY = 'longitude'
     LATITUDE_FEATURE_KEY = 'latitude'
     
+    
     """
-    The constructor reads csv file and builds the data matrix.
+    Predicted label feature name.
     """
+    LABEL_FEATURE_KEY = 'label'
+
+    RELEVENT_FEATURE_LIST = [USER_ID_FEATURE_KEY, LATITUDE_FEATURE_KEY, LONGITUDE_FEATURE_KEY, LABEL_FEATURE_KEY]
+    
     def __init__(self, tweet_file_path, no_of_clusters):
+        """
+        The constructor reads csv file and builds the data matrix.
+        """
         self.np_extractor = ConllExtractor()
         self.pos_tagger = NLTKTagger()
         self.tweet_file_path = tweet_file_path
@@ -95,51 +103,93 @@ class KMeansEstimator:
 
 
     @time_it
-    def perform_clustering(self):
+    def perform_clustering(self, features_to_include=None):
         """
         This function performs k-means clustering with "no_of_clusters" clusters of the data present in file at
         "tweet_file_path".
+        It returns list of feature vector, where each feature vector contains only "features_to_include" or all features
+        if "features_to_include" is None.
         """
         clustering_data_matrix = self.__get_clustering_data_matrix(self.data_matrix)
         transformed_data_matrix = self.vectorizer.fit_transform(clustering_data_matrix)
         
         self.k_means_estimator.fit(transformed_data_matrix, y=None)
-        return self.__get_predicted_labels(self.data_matrix)
+        return self.__get_predicted_labels(self.data_matrix, features_to_include)
 
     @time_it    
-    def __get_predicted_labels(self, data_matrix):
-        predicted_labels = []
+    def __get_predicted_labels(self, data_matrix, features_to_include):
+        """
+        Finds the nearest cluster for all data points and adds a new feature label in all feature vectors of data matrix. The
+        data matrix is modified in place.
+        It returns a new copy of data_matrix with "features_to_include" features.
+        """
         feature_names = self.vectorizer.get_feature_names()
         for feature_vector in data_matrix:
-            user_id = feature_vector.pop(self.USER_ID_FEATURE_KEY)
-            latitude = feature_vector.pop(self.LATITUDE_FEATURE_KEY)
-            longitude = feature_vector.pop(self.LONGITUDE_FEATURE_KEY)
             row = [0] * len(feature_names)
             column = range(len(feature_names))
             data = map(lambda feature_name:feature_vector[feature_name] if feature_name in feature_vector else 0, feature_names)
             feature_csr_matrix = csr_matrix(coo_matrix((data, (row, column))))
             predicted_label = self.k_means_estimator.predict(feature_csr_matrix)
-            predicted_labels.append((user_id, predicted_label[0], latitude, longitude))
-        return predicted_labels;
+            feature_vector[self.LABEL_FEATURE_KEY] = predicted_label[0]
+        
+        expanded_data_matrix = self.__get_expanded_data_matrix(data_matrix)
+        if features_to_include:
+            return self.__get_filtered_data_matrix(expanded_data_matrix, features_to_include)
+        else:
+            return expanded_data_matrix
+
+    @time_it
+    def __get_filtered_data_matrix(self, data_matrix, features_to_include):
+        """
+        Removes all features except features_to_include
+        """
+        filtered_data_matrix = []
+        for feature_vector in data_matrix:
+            filtered_feature_vector = {}
+            for feature_name in features_to_include:
+                filtered_feature_vector[feature_name] = feature_vector[feature_name]
+            filtered_data_matrix.append(filtered_feature_vector)
+        return filtered_data_matrix
     
     @time_it
-    def get_labels_for_data(self, file_path):
+    def __get_expanded_data_matrix(self, data_matrix):
+        """
+        Adds new keys for missing features to all feature vectors of data_matrix. The data matrix is not modified, but a new 
+        modified copy is returned.
+        """
+        feature_names = self.vectorizer.get_feature_names()
+        expanded_data_matrix = copy.deepcopy(data_matrix)
+        for feature_vector in expanded_data_matrix:
+            for feature_name in feature_names:
+                if feature_name not in feature_vector:
+                    feature_vector[feature_name] = 0
+        return expanded_data_matrix
+    
+    @time_it
+    def predict_labels_for_data(self, file_path, features_to_include=None):
         """
         This function reads the tweets of different users from the file at file_path and assigns the closest 
         cluster center to each user.
         It returns list of tuples of (user_id,predicted_label,latitude, longitude).
         """
         data_matrix = self.__get_data_matrix_from_file(file_path)
-        return self.__get_predicted_labels(data_matrix)
+        return self.__get_predicted_labels(data_matrix, features_to_include)
+        
+
+def write_dict_list_to_csv(dict_list, file_name):
+    """
+    Saves the list of dictionaries to file at "file_name". Each dictionary should have same set of keys.
+    """
+    file_writer = csv.DictWriter(open(file_name, "w"), dict_list[0].keys())
+    file_writer.writeheader()
+    file_writer.writerows(dict_list)
     
 if __name__ == "__main__":
     input_file = sys.argv[1]
     output_file = sys.argv[2]
     no_of_clusters = int(sys.argv[3])
-    clusterd_data = KMeansEstimator(input_file, no_of_clusters).perform_clustering()
-    file_writer = csv.writer(open(output_file, "w"), delimiter=",")
+    clusterd_data = KMeansEstimator(input_file, no_of_clusters).perform_clustering(KMeansEstimator.RELEVENT_FEATURE_LIST)
     logging.info("Input file:%s, output file:%s, no of clusters:%d", input_file, output_file, no_of_clusters)
-    file_writer.writerow(['user_id', 'label', 'latitude', 'logitude'])
-    [file_writer.writerow(row) for row in clusterd_data]
+    write_dict_list_to_csv(clusterd_data, output_file)
     logging.info("Written predicted labels for %d users in file:%s", len(clusterd_data), output_file)
 
