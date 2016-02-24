@@ -1,7 +1,5 @@
 import re
 
-import PreprocessTweets
-
 class FilterStopWords:
 
     # stopWords = []
@@ -10,19 +8,14 @@ class FilterStopWords:
         #initialize stopWords
         self.stopWords = []
 
-    #start replaceTwoOrMore
-    # def replaceTwoOrMore(s):
-    #     #look for 2 or more repetitions of character and replace with the character itself
-    #     pattern = re.compile(r"(.)\1{1,}", re.DOTALL)
-    #     return pattern.sub(r"\1\1", s)
-    #end
 
-    #start getStopWordList
     def getStopWordList(self, stopWordListFileName):
         #read the stopwords file and build a list
         stopWords = []
         stopWords.append('AT_USER')
         stopWords.append('URL')
+        stopWords.append('[')
+        stopWords.append('[')
 
         fp = open(stopWordListFileName, 'r')
         line = fp.readline()
@@ -32,9 +25,7 @@ class FilterStopWords:
             line = fp.readline()
         fp.close()
         return stopWords
-    #end
-
-    #start getfeatureVector
+    
     def getFeatureVector(self, tweet, stopWords):
         featureVector = []
         #split tweet into words
@@ -52,4 +43,3 @@ class FilterStopWords:
             else:
                 featureVector.append(w.lower())
         return featureVector
-    #end

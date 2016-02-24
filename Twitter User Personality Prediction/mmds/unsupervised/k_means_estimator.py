@@ -1,6 +1,5 @@
 import copy
 import csv
-import sys
 import logging
 from collections import Counter
 from scipy.sparse import csr_matrix
@@ -10,7 +9,7 @@ from sklearn.feature_extraction.dict_vectorizer import DictVectorizer
 from textblob.blob import TextBlob
 from textblob.en.np_extractors import ConllExtractor
 from textblob.en.taggers import NLTKTagger
-from utils.time_utils import time_it
+from mmds.utils.time_utils import time_it
 
 
 
@@ -185,9 +184,9 @@ def write_dict_list_to_csv(dict_list, file_name):
     file_writer.writerows(dict_list)
     
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    no_of_clusters = int(sys.argv[3])
+    input_file = "../../TwitterData/survey_dump_with_geo_gt_8"
+    output_file = "../../TwitterData/k_means_geo_gt_8_out"
+    no_of_clusters = 10
     clusterd_data = KMeansEstimator(input_file, no_of_clusters).perform_clustering(KMeansEstimator.RELEVENT_FEATURE_LIST)
     logging.info("Input file:%s, output file:%s, no of clusters:%d", input_file, output_file, no_of_clusters)
     write_dict_list_to_csv(clusterd_data, output_file)

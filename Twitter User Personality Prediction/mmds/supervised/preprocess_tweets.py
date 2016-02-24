@@ -1,5 +1,6 @@
 import re
 
+
 class PreprocessTweets:
 
     def __init__(self):
@@ -7,8 +8,7 @@ class PreprocessTweets:
 
     #start process_tweet
     def processTweet(self, tweet):
-        # process the tweets
-
+        
         #Convert to lower case
         tweet = tweet.lower()
         #Convert www.* or https?://* to URL
@@ -28,5 +28,3 @@ class PreprocessTweets:
         tweet = re.sub(r'[^\x00-\x7F]+',' ', tweet)
 
         return tweet
-    #end
-
