@@ -14,17 +14,17 @@ class FeatureEngineering:
         # self.sid = SentimentIntensityAnalyzer()
 
 
-    #start extract_features
-    def extract_features(self,tweet):
+    # start extract_features
+    def extract_features(self, tweet):
         tweet_words = set(tweet)
         features = {}
         for word in self.featureList:
             features['contains(%s)' % word] = (word in tweet_words)
         return features
 
-## Create New Training set based on personality labels predicted from Survey results
+# # Create New Training set based on personality labels predicted from Survey results
 
-    def createNewTrainingSet(self, fileName):
+    def createNewTrainingSet(self, training_data_file):
         XTrain = []
         YTrain = []
         XTrainFeatures = []
@@ -38,8 +38,8 @@ class FeatureEngineering:
 
         stopWords = objFilterStopWords.getStopWordList('../../TwitterData/StopWords.txt')
         
-        #Read the tweets one by one and process it
-        inpTweets = csv.reader(open(fileName, 'rb'), delimiter=',')
+        # Read the tweets one by one and process it
+        inpTweets = csv.reader(open(training_data_file, 'rb'), delimiter=',')
         inpTweets.next()
         tweets = []
         i = 0
@@ -47,8 +47,8 @@ class FeatureEngineering:
 #             print row
             personality = row[5]
             tweet = row[1]
-            cleanTweet = tweet.replace('"",""'," ")
-            cleanTweet = cleanTweet.replace('""'," ")
+            cleanTweet = tweet.replace('"",""', " ")
+            cleanTweet = cleanTweet.replace('""', " ")
             processedTweet = objPreprocessTweets.processTweet(cleanTweet)
 
             XTrainFreqTweets.append(int(row[4]))
@@ -68,13 +68,13 @@ class FeatureEngineering:
             for sentence in blob.sentences:
                 sentiment += sentence.sentiment.polarity
 
-            totSentiment = sentiment/ len(blob.sentences)
+            totSentiment = sentiment / len(blob.sentences)
 
             XTrainSentiment.append(totSentiment)
 
             XTrainFeatures.append(filteredTweets)
             
-            YTrain.append(personality)
+            YTrain.append(personality.replace('[', '').replace('\"', '').replace(']', ''))
                         
 #             i+=1
 #             if i==3:
